@@ -18,7 +18,7 @@ h1{margin:5px 0 4px;font-size:34px}.species{color:#666;margin:0 0 18px;text-tran
 .safe{background:#e8f5e9;color:#1b5e20;padding:13px;border-radius:12px;font-weight:700;margin:12px 0 18px}
 .description{background:#f7f7f7;border-radius:12px;padding:14px;text-align:left;line-height:1.5;margin-bottom:18px}
 button{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:#e53935;color:#fff}
-button.secondary{background:#111}button:disabled{opacity:.55;cursor:not-allowed}
+button.secondary{background:#111}button.whatsapp{background:#25D366;color:#fff}button:disabled{opacity:.55;cursor:not-allowed}
 .small{color:#777;font-size:13px;margin-top:18px}.error{color:#b71c1c;font-weight:700}.loading{color:#555}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);padding:18px;overflow:auto;z-index:10}
 .modal-box{background:#fff;max-width:520px;margin:25px auto;border-radius:22px;padding:24px}
@@ -55,6 +55,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #ddd;border-radius:12p
 
     <button id="sendBtn">🚨 Enviar alerta al dueño</button>
     <div id="sendStatus" class="send-status" style="display:none"></div>
+    <button id="modalWhatsappBtn" class="whatsapp" style="margin-top:12px" disabled>💚 Contactar a mi familia por WhatsApp</button>
 
     <button class="secondary" id="closeBtn" style="margin-top:12px">Cerrar</button>
     <p class="small">La ubicación, foto y mensaje se usan solamente para ayudar a recuperar a la mascota.</p>
@@ -66,7 +67,7 @@ const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const codigo=new URLSearchParams(location.search).get("codigo");
-let petId=null, lat=null, lng=null;
+let petId=null, lat=null, lng=null, ownerWhatsapp=null;
 
 function esc(v){
   return String(v??"").replace(/[&<>"']/g,c=>({
@@ -103,6 +104,15 @@ async function cargar(){
   petId=data.pet_id;
   const p=data.pet;
   const n=esc(p.name), s=esc(p.species), d=esc(p.description);
+
+  // El número se consulta solo para construir el enlace de contacto.
+  // El mensaje se prepara en WhatsApp; no se envía automáticamente.
+  try{
+    const {data:ownerData}=await db.rpc("get_pet_whatsapp",{p_pet_id:petId});
+    ownerWhatsapp=ownerData||null;
+  }catch(e){
+    console.warn("WhatsApp no disponible:",e);
+  }
   const foto=p.photo_url
     ? "<img class='pet-photo' src='"+esc(p.photo_url)+"' alt='Foto de "+n+"'>"
     : "";
@@ -122,9 +132,40 @@ async function cargar(){
       "<span style='color:#555;line-height:1.6'>Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</span>"+
     "</div>"+
     "<button id='foundBtn'>🚨 ENCONTRÉ ESTA MASCOTA</button>"+
+    (ownerWhatsapp ? "<button id='whatsappBtn' class='whatsapp' style='margin-top:12px'>💚 CONTACTAR A MI FAMILIA POR WHATSAPP</button>" : "")+
     "<p class='small'>Un escaneo puede llevarme de vuelta a casa ❤️</p>";
 
   document.getElementById("foundBtn").onclick=abrirFormulario;
+
+  const waBtn=document.getElementById("whatsappBtn");
+  if(waBtn) waBtn.onclick=contactarWhatsApp;
+}
+
+function contactarWhatsApp(){
+  if(!ownerWhatsapp){
+    alert("El dueño no tiene WhatsApp cargado.");
+    return;
+  }
+
+  let numero=String(ownerWhatsapp).replace(/[^0-9]/g,"");
+  if(numero.startsWith("0")) numero=numero.substring(1);
+  if(!numero.startsWith("54")) numero="54"+numero;
+
+  let ubicacion="";
+  if(lat!==null && lng!==null){
+    ubicacion="\\n📍 Ubicación donde la encontré: https://maps.google.com/?q="+lat+","+lng;
+  }else{
+    ubicacion="\\n📍 Todavía no compartí mi ubicación.";
+  }
+
+  const mensaje=
+    "🐾 Hola, encontré a "+(document.querySelector("h1")?.textContent||"tu mascota").replace("🐾 Hola, soy ","")+"."+ 
+    "\\n🏷️ Código: "+codigo+
+    ubicacion+
+    "\\n\\nEstoy tratando de ayudarte a que vuelva con su familia. ❤️"+
+    "\\n\\n— Volvé Pata 🐾";
+
+  window.location.href="https://wa.me/"+numero+"?text="+encodeURIComponent(mensaje);
 }
 
 function abrirFormulario(){
@@ -136,6 +177,7 @@ function cerrarFormulario(){
 }
 
 document.getElementById("closeBtn").onclick=cerrarFormulario;
+document.getElementById("modalWhatsappBtn").onclick=contactarWhatsApp;
 
 document.getElementById("locationBtn").onclick=()=>{
   const st=document.getElementById("gpsStatus");
@@ -150,6 +192,8 @@ document.getElementById("locationBtn").onclick=()=>{
       lat=pos.coords.latitude;
       lng=pos.coords.longitude;
       st.textContent="✅ Ubicación obtenida. Precisión aproximada: "+Math.round(pos.coords.accuracy||0)+" m.";
+      const mw=document.getElementById("modalWhatsappBtn");
+      if(mw && ownerWhatsapp) mw.disabled=false;
     },
     ()=>{
       st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso de ubicación del navegador.";
