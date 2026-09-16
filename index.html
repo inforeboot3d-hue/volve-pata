@@ -109,7 +109,10 @@ async function cargar(){
   // El mensaje se prepara en WhatsApp; no se envía automáticamente.
   try{
     const {data:ownerData}=await db.rpc("get_pet_whatsapp",{p_pet_id:petId});
-    ownerWhatsapp=ownerData||null;
+    ownerWhatsapp =
+      typeof ownerData === "string" ? ownerData :
+      Array.isArray(ownerData) ? (ownerData[0]?.whatsapp || ownerData[0] || null) :
+      (ownerData?.whatsapp || null);
   }catch(e){
     console.warn("WhatsApp no disponible:",e);
   }
@@ -143,7 +146,7 @@ async function cargar(){
 
 function contactarWhatsApp(){
   if(!ownerWhatsapp){
-    alert("El dueño no tiene WhatsApp cargado.");
+    alert("El dueño todavía no tiene un número de WhatsApp cargado en su perfil.");
     return;
   }
 
@@ -193,7 +196,7 @@ document.getElementById("locationBtn").onclick=()=>{
       lng=pos.coords.longitude;
       st.textContent="✅ Ubicación obtenida. Precisión aproximada: "+Math.round(pos.coords.accuracy||0)+" m.";
       const mw=document.getElementById("modalWhatsappBtn");
-      if(mw && ownerWhatsapp) mw.disabled=false;
+      if(mw) mw.disabled=true;
     },
     ()=>{
       st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso de ubicación del navegador.";
@@ -266,7 +269,7 @@ document.getElementById("sendBtn").onclick=async()=>{
     btn.textContent="✅ Alerta enviada";
 
     const mw=document.getElementById("modalWhatsappBtn");
-    if(mw && ownerWhatsapp){
+    if(mw){
       mw.disabled=false;
       mw.textContent="💚 CONTACTAR A MI FAMILIA POR WHATSAPP";
     }
