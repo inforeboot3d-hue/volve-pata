@@ -55,7 +55,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #ddd;border-radius:12p
 
     <button id="sendBtn">🚨 Enviar alerta al dueño</button>
     <div id="sendStatus" class="send-status" style="display:none"></div>
-    <button id="modalWhatsappBtn" class="whatsapp" style="margin-top:12px" disabled>💚 Contactar a mi familia por WhatsApp</button>
+    <button id="modalWhatsappBtn" class="whatsapp" style="margin-top:12px" disabled>💚 CONTACTAR A MI FAMILIA POR WHATSAPP</button>
 
     <button class="secondary" id="closeBtn" style="margin-top:12px">Cerrar</button>
     <p class="small">La ubicación, foto y mensaje se usan solamente para ayudar a recuperar a la mascota.</p>
@@ -260,13 +260,19 @@ document.getElementById("sendBtn").onclick=async()=>{
 
     if(error) throw error;
 
-    document.querySelector(".modal-box").innerHTML=
-      "<div class='success'>"+
-      "<h2>✅ Alerta enviada</h2>"+
-      "<p>Gracias por ayudar a esta mascota.</p>"+
-      "<p>El aviso quedó registrado con la ubicación"+(photoUrl?" y la foto":"")+" para que el dueño pueda verlo.</p>"+
-      "<button class='secondary' onclick='location.reload()'>Cerrar</button>"+
-      "</div>";
+    status.textContent="✅ Alerta enviada correctamente.";
+    status.style.background="#e8f5e9";
+    status.style.color="#1b5e20";
+    btn.textContent="✅ Alerta enviada";
+
+    const mw=document.getElementById("modalWhatsappBtn");
+    if(mw && ownerWhatsapp){
+      mw.disabled=false;
+      mw.textContent="💚 CONTACTAR A MI FAMILIA POR WHATSAPP";
+    }
+
+    // La ventana permanece abierta para que el siguiente paso sea WhatsApp.
+    alert("✅ Alerta enviada. Ahora podés continuar con WhatsApp.");
 
   }catch(err){
     console.error(err);
