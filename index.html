@@ -3,65 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Volvé Pata 🐾 | Identificación de mascotas</title>
+<title>Volvé Pata 🐾</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#111}
-.top{background:#111;color:#fff;padding:12px;text-align:center}
-.top img{width:145px;max-width:48vw;height:58px;object-fit:contain}
-.card{width:min(92%,520px);margin:24px auto;background:#fff;border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.1)}
-.code{display:inline-block;background:#111;color:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;margin-bottom:15px}
+.top{background:#111;color:#fff;padding:18px;text-align:center;font-weight:800;font-size:28px}
+.top span{color:#e53935}
+.card{width:min(92%,520px);margin:28px auto;background:#fff;border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.1)}
+.code{display:inline-block;background:#111;color:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;margin-bottom:18px}
 h1{margin:5px 0 4px;font-size:34px}.species{color:#666;margin:0 0 18px;text-transform:capitalize}
 .pet-photo{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin:5px 0 18px}
 .lost{background:#e53935;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin:12px 0 18px}
 .safe{background:#e8f5e9;color:#1b5e20;padding:13px;border-radius:12px;font-weight:700;margin:12px 0 18px}
 .description{background:#f7f7f7;border-radius:12px;padding:14px;text-align:left;line-height:1.5;margin-bottom:18px}
-button{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:#e53935;color:#fff;margin-top:8px}
-button.dark{background:#111}.small{color:#777;font-size:13px;margin-top:18px}.error{color:#b71c1c;font-weight:700}.loading{color:#555}
-.finder-logo{width:125px;height:125px;object-fit:contain;display:block;margin:0 auto 10px}
-.finder-title{font-size:27px;margin:4px 0 8px}.finder-sub{color:#555;line-height:1.45;margin-bottom:20px}
-.info-box{background:#f7f7f7;border-radius:14px;padding:15px;text-align:left;margin:14px 0;line-height:1.45}
-.back{background:#111}
+button{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:#e53935;color:#fff}
+button.secondary{background:#111}button:disabled{opacity:.55;cursor:not-allowed}
+.small{color:#777;font-size:13px;margin-top:18px}.error{color:#b71c1c;font-weight:700}.loading{color:#555}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);padding:18px;overflow:auto;z-index:10}
+.modal-box{background:#fff;max-width:520px;margin:25px auto;border-radius:22px;padding:24px}
+.modal-box h2{margin-top:0}
+label{display:block;text-align:left;font-weight:700;margin:16px 0 7px}
+textarea{width:100%;min-height:110px;border:1px solid #ccc;border-radius:12px;padding:12px;font-size:16px;resize:vertical}
+input[type=file]{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;background:#fafafa}
+.gps-status,.send-status{margin:12px 0;padding:11px;border-radius:10px;background:#f3f3f3;font-size:14px;text-align:left}
+.preview{display:none;width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:12px}
+.success{text-align:center}.success h2{font-size:28px}
 </style>
 </head>
 <body>
-<div class="top"><img src="logo.png" alt="Volvé Pata"></div>
-<main class="card" id="app"><div class="loading">Buscando la información de la mascota...</div></main>
+<div class="top">VOLVÉ <span>PATA</span> 🐾</div>
+
+<main class="card" id="app">
+  <div class="loading">Buscando la información de la mascota...</div>
+</main>
+
+<div class="modal" id="foundModal">
+  <div class="modal-box">
+    <h2>🐾 Encontré esta mascota</h2>
+    <p>Podés avisarle al dueño dónde la viste. <strong>No necesitás crear una cuenta.</strong></p>
+
+    <button id="locationBtn">📍 Compartir mi ubicación</button>
+    <div id="gpsStatus" class="gps-status">Todavía no compartiste tu ubicación.</div>
+
+    <label for="photo">📸 Foto (opcional)</label>
+    <input id="photo" type="file" accept="image/*" capture="environment">
+    <img id="preview" class="preview" alt="Vista previa">
+
+    <label for="message">💬 Mensaje (opcional)</label>
+    <textarea id="message" placeholder="Ej.: Lo vi cerca de la plaza, está con una persona..."></textarea>
+
+    <button id="sendBtn">🚨 Enviar alerta al dueño</button>
+    <div id="sendStatus" class="send-status" style="display:none"></div>
+
+    <button class="secondary" id="closeBtn" style="margin-top:12px">Cerrar</button>
+    <p class="small">La ubicación, foto y mensaje se usan solamente para ayudar a recuperar a la mascota.</p>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
-const {createClient}=supabase;
-const db=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-let mascotaActual=null;
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const codigo=new URLSearchParams(location.search).get("codigo");
+let petId=null, lat=null, lng=null;
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
 async function cargar(){
- const app=document.getElementById("app"), codigo=new URLSearchParams(location.search).get("codigo");
- if(!codigo){app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No se encontró el código de la chapita.</p><p class='small'>Escaneá nuevamente el código QR.</p>";return}
- const {data,error}=await db.from("tags").select("code, pet:pets(name,species,photo_url,description,is_lost)").eq("code",codigo).eq("active",true).maybeSingle();
- if(error){console.error(error);app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No pudimos consultar la información.</p><p class='small'>Intentá nuevamente en unos segundos.</p>";return}
- if(!data||!data.pet){app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>Esta chapita no está activa o no está vinculada a una mascota.</p><p class='small'>Código: "+esc(codigo)+"</p>";return}
- mascotaActual=data.pet;
- const p=data.pet,n=esc(p.name),s=esc(p.species),d=esc(p.description);
- const foto=p.photo_url?"<img class='pet-photo' src='"+esc(p.photo_url)+"' alt='Foto de "+n+"'>":"";
- app.innerHTML="<div class='code'>Código "+esc(data.code)+"</div><h1>"+n+"</h1><p class='species'>"+s+"</p>"+foto+
- (p.is_lost?"<div class='lost'>🚨 ESTA MASCOTA ESTÁ PERDIDA</div>":"<div class='safe'>🐾 Perfil activo de esta mascota</div>")+
- (d?"<div class='description'><strong>Información:</strong><br>"+d+"</div>":"")+ 
- (p.is_lost?"<button onclick='encontrada()'>📍 Encontré esta mascota</button>":"")+ 
- "<p class='small'>Un escaneo puede llevarlo de vuelta a casa ❤️</p>";
+  const app=document.getElementById("app");
+
+  if(!codigo){
+    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No se encontró el código de la chapita.</p><p class='small'>Escaneá nuevamente el código QR.</p>";
+    return;
+  }
+
+  const {data,error}=await db
+    .from("tags")
+    .select("code,pet_id,pet:pets(name,species,photo_url,description,is_lost)")
+    .eq("code",codigo)
+    .eq("active",true)
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No pudimos consultar la información.</p><p class='small'>Intentá nuevamente en unos segundos.</p>";
+    return;
+  }
+
+  if(!data||!data.pet){
+    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>Esta chapita no está activa o no está vinculada a una mascota.</p><p class='small'>Código: "+esc(codigo)+"</p>";
+    return;
+  }
+
+  petId=data.pet_id;
+  const p=data.pet;
+  const n=esc(p.name), s=esc(p.species), d=esc(p.description);
+  const foto=p.photo_url
+    ? "<img class='pet-photo' src='"+esc(p.photo_url)+"' alt='Foto de "+n+"'>"
+    : "";
+
+  app.innerHTML=
+    "<div class='code'>Código "+esc(data.code)+"</div>"+
+    "<h1>🐾 Hola, soy "+n+"</h1>"+
+    (p.is_lost
+      ? "<div class='lost'>🚨 Me perdí y necesito volver con mi familia ❤️</div>"
+      : "<div class='safe'>❤️ Mi familia me cuida y este es mi perfil de identificación</div>")+
+    "<p style='font-size:17px;line-height:1.5;margin:0 0 18px'>Si encontraste mi chapita, ayudame a volver con mi familia.</p>"+
+    "<p class='species'>"+s+"</p>"+
+    foto+
+    (d ? "<div class='description'><strong>🐶 Sobre mí</strong><br>"+d+"</div>" : "")+
+    "<div style='text-align:left;background:#fff3f3;border-radius:14px;padding:15px;margin-bottom:18px'>"+
+      "<strong>🚨 ¿Me encontraste?</strong><br>"+
+      "<span style='color:#555;line-height:1.6'>Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</span>"+
+    "</div>"+
+    "<button id='foundBtn'>🚨 ENCONTRÉ ESTA MASCOTA</button>"+
+    "<p class='small'>Un escaneo puede llevarme de vuelta a casa ❤️</p>";
+
+  document.getElementById("foundBtn").onclick=abrirFormulario;
 }
-function encontrada(){
- const app=document.getElementById("app");
- app.innerHTML="<img class='finder-logo' src='logo.png' alt='Volvé Pata'>"+
- "<div class='code'>VOLVÉ PATA</div>"+
- "<h2 class='finder-title'>¡Gracias por ayudar! 🐾</h2>"+
- "<p class='finder-sub'>Encontraste una mascota identificada con un llavero <b>Volvé Pata</b>.</p>"+
- "<div class='info-box'><b>¿Qué podés hacer ahora?</b><br><br>📍 Enviar dónde la encontraste<br>📷 Enviar una foto<br>💬 Dejar un mensaje para su dueño</div>"+
- "<button onclick='mostrarProximamente()'>📍 Continuar para ayudar</button>"+
- "<button class='back' onclick='cargar()'>← Volver a la mascota</button>"+
- "<p class='small'>Un escaneo puede llevarlo de vuelta a casa ❤️</p>";
+
+function abrirFormulario(){
+  document.getElementById("foundModal").style.display="block";
 }
-function mostrarProximamente(){alert("Estamos preparando el envío de ubicación, foto y mensaje al dueño. Esta pantalla ya identifica que el llavero es de Volvé Pata.")}
+
+function cerrarFormulario(){
+  document.getElementById("foundModal").style.display="none";
+}
+
+document.getElementById("closeBtn").onclick=cerrarFormulario;
+
+document.getElementById("locationBtn").onclick=()=>{
+  const st=document.getElementById("gpsStatus");
+  st.textContent="📍 Solicitando ubicación...";
+  if(!navigator.geolocation){
+    st.textContent="❌ Este navegador no permite obtener ubicación.";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      lat=pos.coords.latitude;
+      lng=pos.coords.longitude;
+      st.textContent="✅ Ubicación obtenida. Precisión aproximada: "+Math.round(pos.coords.accuracy||0)+" m.";
+    },
+    ()=>{
+      st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso de ubicación del navegador.";
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+};
+
+document.getElementById("photo").onchange=(e)=>{
+  const file=e.target.files[0];
+  const preview=document.getElementById("preview");
+  if(!file){preview.style.display="none";return;}
+  preview.src=URL.createObjectURL(file);
+  preview.style.display="block";
+};
+
+async function subirFoto(file){
+  if(!file) return null;
+
+  const extension=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const path="alerts/"+crypto.randomUUID()+"."+extension;
+
+  const {error}=await db.storage.from("alert-photos").upload(path,file,{
+    contentType:file.type||"image/jpeg",
+    upsert:false
+  });
+
+  if(error) throw error;
+
+  const {data}=db.storage.from("alert-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+document.getElementById("sendBtn").onclick=async()=>{
+  const btn=document.getElementById("sendBtn");
+  const status=document.getElementById("sendStatus");
+  const file=document.getElementById("photo").files[0];
+  const message=document.getElementById("message").value.trim();
+
+  if(!petId){
+    alert("No se encontró la mascota.");
+    return;
+  }
+
+  if(lat===null||lng===null){
+    alert("Primero tocá “Compartir mi ubicación”.");
+    return;
+  }
+
+  btn.disabled=true;
+  status.style.display="block";
+  status.textContent="Enviando alerta...";
+
+  try{
+    const photoUrl=await subirFoto(file);
+
+    const {error}=await db.from("alerts").insert({
+      pet_id:petId,
+      latitude:lat,
+      longitude:lng,
+      message:message||null,
+      photo_url:photoUrl
+    });
+
+    if(error) throw error;
+
+    document.querySelector(".modal-box").innerHTML=
+      "<div class='success'>"+
+      "<h2>✅ Alerta enviada</h2>"+
+      "<p>Gracias por ayudar a esta mascota.</p>"+
+      "<p>El aviso quedó registrado con la ubicación"+(photoUrl?" y la foto":"")+" para que el dueño pueda verlo.</p>"+
+      "<button class='secondary' onclick='location.reload()'>Cerrar</button>"+
+      "</div>";
+
+  }catch(err){
+    console.error(err);
+    status.textContent="❌ No pudimos enviar la alerta. Revisá la conexión e intentá nuevamente.";
+    btn.disabled=false;
+  }
+};
+
 cargar();
 </script>
 </body>
