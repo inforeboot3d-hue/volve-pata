@@ -669,6 +669,7 @@ let lat=null;
 let lng=null;
 let selectedPhotoFile=null;
 let selectedPhotoUrl=null;
+let whatsapp=null;
 
 function esc(v){
 return String(v??"").replace(
@@ -731,6 +732,24 @@ return;
 }
 
 petId=data.pet_id;
+
+// Obtenemos solamente el WhatsApp del dueño mediante la función segura de Supabase.
+try{
+  const {data:waData,error:waError}=await db.rpc(
+    "get_pet_whatsapp",
+    {p_pet_id:petId}
+  );
+
+  if(waError){
+    console.error("WHATSAPP RPC ERROR:",waError);
+    whatsapp=null;
+  }else{
+    whatsapp=waData ? String(waData).replace(/\D/g,"") : null;
+  }
+}catch(waError){
+  console.error("WHATSAPP ERROR:",waError);
+  whatsapp=null;
+}
 
 const p=data.pet;
 
@@ -1018,30 +1037,49 @@ document
 .value
 .trim();
 
-let alertId=null;
+/*
+  Si hay una foto, la intentamos subir ANTES de crear la alerta.
+  Si la foto falla, la alerta igualmente se envía sin foto.
+*/
+let photoUrl=null;
+
+if(selectedPhotoFile){
+  try{
+    btn.textContent="Guardando foto...";
+    photoUrl=await subirFotoAlerta(selectedPhotoFile);
+  }catch(photoError){
+    console.error("PHOTO UPLOAD ERROR:",photoError);
+    photoUrl=null;
+  }
+}
+
+btn.textContent="Enviando alerta...";
 
 /*
-  IMPORTANTE:
-  Primero guardamos la alerta. Así una falla al subir la foto
-  no impide enviar la ubicación y el mensaje.
+  IMPORTANTE: no usamos .select() después del INSERT.
+  Eso evita exigir permiso SELECT sobre la tabla alerts a los visitantes
+  anónimos que escanean una chapita.
 */
-const {data: insertedAlert, error: insertError}=await db
+const {error:insertError}=await db
 .from("alerts")
 .insert({
   pet_id:petId,
   latitude:lat,
   longitude:lng,
-  message:message||null
-})
-.select("id")
-.maybeSingle();
+  message:message||null,
+  photo_url:photoUrl||null
+});
 
 if(insertError){
 
 console.error("ALERT INSERT ERROR:",insertError);
 
 alert(
-"No pudimos enviar la alerta. Revisá la conexión e intentá nuevamente."
+  "No pudimos enviar la alerta.\n\n" +
+  "Mensaje: " + (insertError.message || "") + "\n" +
+  "Código: " + (insertError.code || "") + "\n" +
+  "Detalles: " + (insertError.details || "") + "\n" +
+  "Ayuda: " + (insertError.hint || "")
 );
 
 btn.disabled=false;
@@ -1049,48 +1087,9 @@ btn.textContent="🚨 ENVIAR ALERTA";
 return;
 }
 
-alertId=insertedAlert?.id || null;
-
 /*
-  La alerta ya fue enviada.
-  Si hay foto, intentamos subirla después.
-  Si la foto falla, NO anulamos la alerta.
-*/
-let photoUrl=null;
-
-if(selectedPhotoFile && alertId){
-
-  try{
-
-    btn.textContent="Guardando foto...";
-
-    photoUrl=
-      await subirFotoAlerta(selectedPhotoFile);
-
-    if(photoUrl){
-
-      const {error:photoUpdateError}=await db
-      .from("alerts")
-      .update({photo_url:photoUrl})
-      .eq("id",alertId);
-
-      if(photoUpdateError){
-        console.error("PHOTO URL UPDATE ERROR:",photoUpdateError);
-      }
-    }
-
-  }catch(photoError){
-
-    console.error("PHOTO UPLOAD ERROR:",photoError);
-
-    // La alerta ya fue enviada, así que seguimos.
-    photoUrl=null;
-  }
-}
-
-/*
-  Ahora habilitamos WhatsApp solamente porque la alerta
-  fue guardada correctamente.
+  La alerta fue guardada correctamente.
+  Recién ahora habilitamos WhatsApp.
 */
 const whatsappBtn=
 document.getElementById("whatsappBtn");
