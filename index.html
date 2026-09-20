@@ -635,7 +635,7 @@ Compartí tu ubicación para ayudar a mi familia a encontrarme.
 <label for="message">Mensaje</label>
 
 <textarea id="message"
-placeholder="Ej.: Te vi cerca de la plaza..."></textarea>
+placeholder="Contanos dónde la viste y, si podés, dejá un dato de contacto (WhatsApp, email u otro) para que el dueño pueda comunicarse con vos."></textarea>
 
 <button class="btn" id="sendBtn">
 🚨 ENVIAR ALERTA
@@ -1099,9 +1099,16 @@ document.getElementById("whatsappBtn");
 
 if(whatsapp && whatsappBtn){
 
+  const ubicacionUrl =
+    (lat !== null && lng !== null)
+    ? "https://www.google.com/maps?q=" + lat + "," + lng
+    : "Ubicación no disponible";
+
   const mensaje=
-    "Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "
-    + codigo;
+    "Hola, encontré tu mascota mediante Volvé Pata.\n\n" +
+    "Código de chapita: " + codigo + "\n" +
+    "📍 Ubicación donde envié la alerta: " + ubicacionUrl +
+    (message ? "\n\n💬 Mensaje: " + message : "");
 
   whatsappBtn.href=
     "https://wa.me/"+
@@ -1138,7 +1145,13 @@ ${
   ? `
   <a
     class="btn"
-    href="${"https://wa.me/"+whatsapp+"?text="+encodeURIComponent("Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "+codigo)}"
+    href="${"https://wa.me/"+whatsapp+"?text="+encodeURIComponent(
+      "Hola, encontré tu mascota mediante Volvé Pata.\n\n" +
+      "Código de chapita: " + codigo + "\n" +
+      "📍 Ubicación donde envié la alerta: " +
+      ((lat !== null && lng !== null) ? "https://www.google.com/maps?q="+lat+","+lng : "Ubicación no disponible") +
+      (message ? "\n\n💬 Mensaje: " + message : "")
+    )}"
     target="_blank"
     style="
       background:linear-gradient(90deg,#18c964,#25d366);
