@@ -1,290 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Volvé Pata 🐾</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Volvé Pata</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#111}
-.top{background:#111;color:#fff;padding:18px;text-align:center;font-weight:800;font-size:28px}
-.top span{color:#e53935}
-.card{width:min(92%,520px);margin:28px auto;background:#fff;border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.1)}
-.code{display:inline-block;background:#111;color:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;margin-bottom:18px}
-h1{margin:5px 0 4px;font-size:34px}.species{color:#666;margin:0 0 18px;text-transform:capitalize}
-.pet-photo{width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin:5px 0 18px}
-.lost{background:#e53935;color:#fff;padding:13px;border-radius:12px;font-weight:800;margin:12px 0 18px}
-.safe{background:#e8f5e9;color:#1b5e20;padding:13px;border-radius:12px;font-weight:700;margin:12px 0 18px}
-.description{background:#f7f7f7;border-radius:12px;padding:14px;text-align:left;line-height:1.5;margin-bottom:18px}
-button{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:#e53935;color:#fff}
-button.secondary{background:#111}button.whatsapp{background:#25D366;color:#fff}button:disabled{opacity:.55;cursor:not-allowed}
-.small{color:#777;font-size:13px;margin-top:18px}.error{color:#b71c1c;font-weight:700}.loading{color:#555}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);padding:18px;overflow:auto;z-index:10}
-.modal-box{background:#fff;max-width:520px;margin:25px auto;border-radius:22px;padding:24px}
-.modal-box h2{margin-top:0}
-label{display:block;text-align:left;font-weight:700;margin:16px 0 7px}
-textarea{width:100%;min-height:110px;border:1px solid #ccc;border-radius:12px;padding:12px;font-size:16px;resize:vertical}
-input[type=file]{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;background:#fafafa}
-.gps-status,.send-status{margin:12px 0;padding:11px;border-radius:10px;background:#f3f3f3;font-size:14px;text-align:left}
-.preview{display:none;width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:12px}
-.success{text-align:center}.success h2{font-size:28px}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#050505;color:#fff}body{overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 52%,rgba(255,0,0,.18),transparent 24%),radial-gradient(circle at 88% 58%,rgba(180,0,0,.2),transparent 24%),linear-gradient(120deg,#050505 0%,#090909 48%,#120000 100%);z-index:-3}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(135deg,transparent 0 22px,#d40000 23px 26px,transparent 27px 70px);mask-image:linear-gradient(to right,black 0 12%,transparent 27% 73%,black 88%);z-index:-2}
+header{height:118px;display:flex;justify-content:center;align-items:center;border-bottom:3px solid #f11;background:#050505;position:relative;z-index:2}
+.header-logo{width:min(250px,60vw);max-height:105px;object-fit:contain;display:block}
+.layout{max-width:1040px;margin:0 auto;padding:32px 18px 45px;display:grid;grid-template-columns:180px minmax(0,700px) 180px;gap:20px;align-items:start}
+.side{min-height:700px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.side-left .phrase{font-weight:900;text-transform:uppercase;font-size:24px;line-height:1.02;text-align:left;color:#fff;text-shadow:2px 2px 0 #000}
+.side-left .phrase span{color:#f22}.side-right{text-align:right}.script{font-family:"Brush Script MT","Segoe Script",cursive;font-style:italic;color:#fff;font-size:33px;line-height:.95}.script.red{color:#f22}.paws{font-size:48px;line-height:1.4;color:#d40000;opacity:.55;letter-spacing:4px}.side-bottom{font-weight:900;text-transform:uppercase;font-size:18px;line-height:1.05}.side-bottom span{color:#f22}
+.card{background:linear-gradient(145deg,rgba(17,17,17,.98),rgba(5,5,5,.98));border:2px solid #f22;border-radius:30px;padding:26px 30px 28px;box-shadow:0 0 38px rgba(255,0,0,.25),inset 0 0 35px rgba(255,0,0,.04)}
+.code{display:inline-block;background:#ef2028;color:#fff;padding:11px 20px;border-radius:30px;font-weight:900;font-size:19px;box-shadow:0 0 16px rgba(255,0,0,.2)}
+.top{text-align:center}.hello{font-size:38px;font-weight:800;margin:20px 0 0}.pet-name{font-size:44px;font-weight:900;color:#ef2028;text-transform:uppercase;line-height:1.05;margin:3px 0 14px}.species{text-align:center;color:#ddd;font-size:19px}
+.lost{background:linear-gradient(90deg,#f3131d,#ed3030);color:#fff;padding:16px 18px;border-radius:18px;text-align:center;font-weight:900;font-size:21px;margin:20px 0;box-shadow:0 0 20px rgba(255,0,0,.18)}
+.intro{text-align:center;font-size:18px;color:#eee;margin:15px 0 22px}
+.pet-grid{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:stretch}.pet-photo{width:100%;height:220px;object-fit:cover;border-radius:20px;border:2px solid #e22;display:block;background:#111}.photo-placeholder{height:220px;border-radius:20px;border:2px solid #e22;background:#111;display:flex;align-items:center;justify-content:center;font-size:60px}
+.detail{background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #333;border-radius:18px;padding:17px 18px;margin-bottom:12px;min-height:94px}.detail:last-child{margin-bottom:0}.detail-title{color:#aaa;font-size:15px;margin-bottom:8px}.detail-value{font-size:20px;color:#fff;line-height:1.35}.icon{color:#ef2028;font-size:25px;margin-right:8px}
+.help{margin-top:18px;border:1px solid #e22;border-radius:18px;padding:17px 20px;background:linear-gradient(90deg,rgba(80,0,0,.48),rgba(18,18,18,.95));display:flex;gap:14px;align-items:flex-start}.help-icon{font-size:32px;color:#ef2028}.help-title{font-weight:900;font-size:20px;margin-bottom:5px}.help-text{color:#ddd;font-size:17px;line-height:1.35}
+.btn{display:block;width:100%;border:0;border-radius:20px;padding:20px 18px;margin-top:22px;background:linear-gradient(90deg,#ff121d,#ed2f36);color:#fff;font-size:23px;font-weight:900;cursor:pointer;box-shadow:0 0 24px rgba(255,0,0,.18);transition:.15s}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.6}.secondary{background:#151515;border:1px solid #444;box-shadow:none}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px}.action{text-align:center;color:#eee;font-size:15px;line-height:1.2}.action-icon{display:block;font-size:33px;color:#ef2028;margin-bottom:7px}
+.footer{text-align:center;color:#ddd;font-size:16px;margin-top:18px}.footer b{color:#ef2028}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);padding:18px;align-items:center;justify-content:center;z-index:20}.modalbox{background:#111;border:2px solid #f22;border-radius:24px;padding:25px;max-width:520px;width:100%;box-shadow:0 0 35px rgba(255,0,0,.25)}.modalbox h2{margin-top:0}.modalbox p{color:#ddd}.modalbox label{font-weight:700;display:block;margin:16px 0 7px}.modalbox textarea{width:100%;min-height:120px;border:1px solid #444;border-radius:14px;padding:14px;font-size:17px;background:#181818;color:#fff}.status{margin-top:14px;padding:13px;border-radius:12px;background:#191919;color:#ddd}.small{color:#999;font-size:13px;margin-top:12px}.success{text-align:center}.success h2{font-size:30px;color:#fff}
+@media(max-width:850px){.layout{grid-template-columns:1fr;max-width:720px}.side{display:none}.card{padding:22px 18px;border-radius:24px}.header-logo{width:210px}.pet-grid{grid-template-columns:1fr}.pet-photo,.photo-placeholder{height:280px}.hello{font-size:32px}.pet-name{font-size:38px}.actions{gap:8px}.action{font-size:14px}}
+@media(max-width:480px){header{height:94px}.header-logo{width:190px}.layout{padding:18px 10px 35px}.code{font-size:16px;padding:10px 16px}.hello{font-size:28px}.pet-name{font-size:34px}.lost{font-size:18px}.intro{font-size:16px}.pet-photo,.photo-placeholder{height:230px}.help-text{font-size:16px}.btn{font-size:20px}.actions{grid-template-columns:repeat(3,1fr)}.action-icon{font-size:28px}}
 </style>
 </head>
 <body>
-<div class="top">VOLVÉ <span>PATA</span> 🐾</div>
-
-<main class="card" id="app">
-  <div class="loading">Buscando la información de la mascota...</div>
-</main>
-
-<div class="modal" id="foundModal">
-  <div class="modal-box">
-    <h2>🐾 Encontré esta mascota</h2>
-    <p>Podés avisarle al dueño dónde la viste. <strong>No necesitás crear una cuenta.</strong></p>
-
-    <button id="locationBtn">📍 Compartir mi ubicación</button>
-    <div id="gpsStatus" class="gps-status">Todavía no compartiste tu ubicación.</div>
-
-    <label for="photo">📸 Foto (opcional)</label>
-    <input id="photo" type="file" accept="image/*" capture="environment">
-    <img id="preview" class="preview" alt="Vista previa">
-
-    <label for="message">💬 Mensaje (opcional)</label>
-    <textarea id="message" placeholder="Ej.: Lo vi cerca de la plaza, está con una persona..."></textarea>
-
-    <button id="sendBtn">🚨 Enviar alerta al dueño</button>
-    <div id="sendStatus" class="send-status" style="display:none"></div>
-    <button id="modalWhatsappBtn" class="whatsapp" style="margin-top:12px" disabled>💚 CONTACTAR A MI FAMILIA POR WHATSAPP</button>
-
-    <button class="secondary" id="closeBtn" style="margin-top:12px">Cerrar</button>
-    <p class="small">La ubicación, foto y mensaje se usan solamente para ayudar a recuperar a la mascota.</p>
-  </div>
+<header><img class="header-logo" src="logo.png" alt="Volvé Pata"></header>
+<div class="layout">
+  <aside class="side side-left">
+    <div class="phrase">Cuando una mascota se pierde,<br><span>se pierde un familiar</span> ❤️</div>
+    <div class="paws">🐾<br>🐾<br>🐾</div>
+    <div class="side-bottom">Escaneá<br><span>ayudá</span><br>compartí</div>
+  </aside>
+  <main><div class="card" id="app"><p>Cargando...</p></div></main>
+  <aside class="side side-right">
+    <div class="script">Cada<br>mascota<br>importa <span class="red">♥</span></div>
+    <div class="paws">🐾<br>🐾<br>🐾</div>
+    <div class="script red">Ayudanos<br>a que vuelvan<br>a casa ♥</div>
+    <div class="side-bottom">Juntos por más<br><span>reencuentros</span></div>
+  </aside>
 </div>
-
+<div class="modal" id="modal"><div class="modalbox">
+  <h2>📍 Encontré esta mascota</h2>
+  <p>Podés avisarle al responsable dónde la viste. No necesitás crear una cuenta.</p>
+  <button class="btn secondary" id="gpsBtn">📍 Compartir mi ubicación</button>
+  <div id="gpsStatus" class="status" style="display:none"></div>
+  <label for="message">Mensaje (opcional)</label>
+  <textarea id="message" placeholder="Ej.: La vi cerca de la plaza..."></textarea>
+  <button class="btn" id="sendBtn">🚨 Enviar alerta</button>
+  <button class="btn secondary" id="closeBtn">Cerrar</button>
+  <div class="small">La ubicación se comparte solamente para ayudar a encontrar a la mascota.</div>
+</div></div>
 <script>
 const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const codigo=new URLSearchParams(location.search).get("codigo");
-let petId=null, lat=null, lng=null, ownerWhatsapp=null;
-
-function esc(v){
-  return String(v??"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
+const codigo=new URLSearchParams(location.search).get("codigo")||"VP-000001";
+let petId=null,lat=null,lng=null;
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;",'\'':"&#039;"}[m]));}
+async function loadPet(){
+ const box=document.getElementById("app");
+ const {data,error}=await db.from("tags").select("code,pet_id,pet:pets(name,species,photo_url,description,is_lost)").eq("code",codigo).eq("active",true).maybeSingle();
+ if(error){box.innerHTML="<h2>Volvé Pata</h2><p>No pudimos consultar la información. Intentá nuevamente.</p>";return;}
+ if(!data||!data.pet){box.innerHTML="<h2>Volvé Pata</h2><p>Esta chapita no está vinculada a una mascota.</p>";return;}
+ petId=data.pet_id;const p=data.pet;
+ box.innerHTML=`
+ <div class="top"><span class="code">Código ${esc(data.code)}</span>
+ <div class="hello">Hola, soy</div><div class="pet-name">${esc(p.name)}</div><div class="species">${esc(p.species)}</div></div>
+ ${p.is_lost?'<div class="lost">🐾 Me perdí y necesito volver con mi familia ❤️</div>':''}
+ <div class="intro">Si encontraste mi chapita, ayudame a volver con mi familia.</div>
+ <div class="pet-grid">
+   <div>${p.photo_url?`<img class="pet-photo" src="${esc(p.photo_url)}" alt="Foto de ${esc(p.name)}">`:'<div class="photo-placeholder">🐾</div>'}</div>
+   <div>
+    <div class="detail"><div class="detail-title"><span class="icon">🐾</span>Tipo de mascota</div><div class="detail-value">${esc(p.species||'Mascota')}</div></div>
+    <div class="detail"><div class="detail-title"><span class="icon">▣</span>Sobre mí</div><div class="detail-value">${p.description?esc(p.description):'Mi familia está esperando encontrarme.'}</div></div>
+   </div>
+ </div>
+ <div class="help"><div class="help-icon">📍</div><div><div class="help-title">¿Me encontraste?</div><div class="help-text">Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</div></div></div>
+ <button class="btn" id="foundBtn">📍 ENCONTRÉ ESTA MASCOTA　›</button>
+ <div class="actions"><div class="action"><span class="action-icon">⌖</span>Compartí tu<br>ubicación</div><div class="action"><span class="action-icon">◉</span>Adjuntá una<br>foto</div><div class="action"><span class="action-icon">💬</span>Dejá un<br>mensaje</div></div>
+ <div class="footer"><b>🐾</b> Un escaneo puede llevarme de vuelta a casa <b>♥</b></div>`;
+ document.getElementById("foundBtn").onclick=()=>document.getElementById("modal").style.display="flex";
 }
-
-async function cargar(){
-  const app=document.getElementById("app");
-
-  if(!codigo){
-    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No se encontró el código de la chapita.</p><p class='small'>Escaneá nuevamente el código QR.</p>";
-    return;
-  }
-
-  const {data,error}=await db
-    .from("tags")
-    .select("code,pet_id,pet:pets(name,species,photo_url,description,is_lost)")
-    .eq("code",codigo)
-    .eq("active",true)
-    .maybeSingle();
-
-  if(error){
-    console.error(error);
-    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>No pudimos consultar la información.</p><p class='small'>Intentá nuevamente en unos segundos.</p>";
-    return;
-  }
-
-  if(!data||!data.pet){
-    app.innerHTML="<h1>Volvé Pata 🐾</h1><p class='error'>Esta chapita no está activa o no está vinculada a una mascota.</p><p class='small'>Código: "+esc(codigo)+"</p>";
-    return;
-  }
-
-  petId=data.pet_id;
-  const p=data.pet;
-  const n=esc(p.name), s=esc(p.species), d=esc(p.description);
-
-  // El número se consulta solo para construir el enlace de contacto.
-  // El mensaje se prepara en WhatsApp; no se envía automáticamente.
-  try{
-    const {data:ownerData}=await db.rpc("get_pet_whatsapp",{p_pet_id:petId});
-    ownerWhatsapp =
-      typeof ownerData === "string" ? ownerData :
-      Array.isArray(ownerData) ? (ownerData[0]?.whatsapp || ownerData[0] || null) :
-      (ownerData?.whatsapp || null);
-  }catch(e){
-    console.warn("WhatsApp no disponible:",e);
-  }
-  const foto=p.photo_url
-    ? "<img class='pet-photo' src='"+esc(p.photo_url)+"' alt='Foto de "+n+"'>"
-    : "";
-
-  app.innerHTML=
-    "<div class='code'>Código "+esc(data.code)+"</div>"+
-    "<h1>🐾 Hola, soy "+n+"</h1>"+
-    (p.is_lost
-      ? "<div class='lost'>🚨 Me perdí y necesito volver con mi familia ❤️</div>"
-      : "<div class='safe'>❤️ Mi familia me cuida y este es mi perfil de identificación</div>")+
-    "<p style='font-size:17px;line-height:1.5;margin:0 0 18px'>Si encontraste mi chapita, ayudame a volver con mi familia.</p>"+
-    "<p class='species'>"+s+"</p>"+
-    foto+
-    (d ? "<div class='description'><strong>🐶 Sobre mí</strong><br>"+d+"</div>" : "")+
-    "<div style='text-align:left;background:#fff3f3;border-radius:14px;padding:15px;margin-bottom:18px'>"+
-      "<strong>🚨 ¿Me encontraste?</strong><br>"+
-      "<span style='color:#555;line-height:1.6'>Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</span>"+
-    "</div>"+
-    "<button id='foundBtn'>🚨 ENCONTRÉ ESTA MASCOTA</button>"+
-    
-    "<p class='small'>Un escaneo puede llevarme de vuelta a casa ❤️</p>";
-
-  document.getElementById("foundBtn").onclick=abrirFormulario;
-
-  const waBtn=document.getElementById("whatsappBtn");
-  if(waBtn) waBtn.onclick=contactarWhatsApp;
-}
-
-function contactarWhatsApp(){
-  if(!ownerWhatsapp){
-    alert("El dueño todavía no tiene un número de WhatsApp cargado en su perfil.");
-    return;
-  }
-
-  let numero=String(ownerWhatsapp).replace(/[^0-9]/g,"");
-  if(numero.startsWith("0")) numero=numero.substring(1);
-  if(!numero.startsWith("54")) numero="54"+numero;
-
-  let ubicacion="";
-  if(lat!==null && lng!==null){
-    ubicacion="\\n📍 Ubicación donde la encontré: https://maps.google.com/?q="+lat+","+lng;
-  }else{
-    ubicacion="\\n📍 Todavía no compartí mi ubicación.";
-  }
-
-  const mensaje=
-    "🐾 Hola, encontré a "+(document.querySelector("h1")?.textContent||"tu mascota").replace("🐾 Hola, soy ","")+"."+ 
-    "\\n🏷️ Código: "+codigo+
-    ubicacion+
-    "\\n\\nEstoy tratando de ayudarte a que vuelva con su familia. ❤️"+
-    "\\n\\n— Volvé Pata 🐾";
-
-  window.location.href="https://wa.me/"+numero+"?text="+encodeURIComponent(mensaje);
-}
-
-function abrirFormulario(){
-  document.getElementById("foundModal").style.display="block";
-}
-
-function cerrarFormulario(){
-  document.getElementById("foundModal").style.display="none";
-}
-
-document.getElementById("closeBtn").onclick=cerrarFormulario;
-document.getElementById("modalWhatsappBtn").onclick=contactarWhatsApp;
-
-document.getElementById("locationBtn").onclick=()=>{
-  const st=document.getElementById("gpsStatus");
-  st.textContent="📍 Solicitando ubicación...";
-  if(!navigator.geolocation){
-    st.textContent="❌ Este navegador no permite obtener ubicación.";
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      lat=pos.coords.latitude;
-      lng=pos.coords.longitude;
-      st.textContent="✅ Ubicación obtenida. Precisión aproximada: "+Math.round(pos.coords.accuracy||0)+" m.";
-      const mw=document.getElementById("modalWhatsappBtn");
-      if(mw) mw.disabled=true;
-    },
-    ()=>{
-      st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso de ubicación del navegador.";
-    },
-    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
-  );
-};
-
-document.getElementById("photo").onchange=(e)=>{
-  const file=e.target.files[0];
-  const preview=document.getElementById("preview");
-  if(!file){preview.style.display="none";return;}
-  preview.src=URL.createObjectURL(file);
-  preview.style.display="block";
-};
-
-async function subirFoto(file){
-  if(!file) return null;
-
-  const extension=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
-  const path="alerts/"+crypto.randomUUID()+"."+extension;
-
-  const {error}=await db.storage.from("alert-photos").upload(path,file,{
-    contentType:file.type||"image/jpeg",
-    upsert:false
-  });
-
-  if(error) throw error;
-
-  const {data}=db.storage.from("alert-photos").getPublicUrl(path);
-  return data.publicUrl;
-}
-
-document.getElementById("sendBtn").onclick=async()=>{
-  const btn=document.getElementById("sendBtn");
-  const status=document.getElementById("sendStatus");
-  const file=document.getElementById("photo").files[0];
-  const message=document.getElementById("message").value.trim();
-
-  if(!petId){
-    alert("No se encontró la mascota.");
-    return;
-  }
-
-  if(lat===null||lng===null){
-    alert("Primero tocá “Compartir mi ubicación”.");
-    return;
-  }
-
-  btn.disabled=true;
-  status.style.display="block";
-  status.textContent="Enviando alerta...";
-
-  try{
-    const photoUrl=await subirFoto(file);
-
-    const {error}=await db.from("alerts").insert({
-      pet_id:petId,
-      latitude:lat,
-      longitude:lng,
-      message:message||null,
-      photo_url:photoUrl
-    });
-
-    if(error) throw error;
-
-    status.textContent="✅ Alerta enviada correctamente.";
-    status.style.background="#e8f5e9";
-    status.style.color="#1b5e20";
-    btn.textContent="✅ Alerta enviada";
-
-    const mw=document.getElementById("modalWhatsappBtn");
-    if(mw){
-      mw.disabled=false;
-      mw.textContent="💚 CONTACTAR A MI FAMILIA POR WHATSAPP";
-    }
-
-    // La ventana permanece abierta para que el siguiente paso sea WhatsApp.
-    alert("✅ Alerta enviada. Ahora podés continuar con WhatsApp.");
-
-  }catch(err){
-    console.error(err);
-    status.textContent="❌ No pudimos enviar la alerta. Revisá la conexión e intentá nuevamente.";
-    btn.disabled=false;
-  }
-};
-
-cargar();
+document.getElementById("closeBtn").onclick=()=>document.getElementById("modal").style.display="none";
+document.getElementById("gpsBtn").onclick=async()=>{const st=document.getElementById("gpsStatus");st.style.display="block";st.textContent="Solicitando ubicación...";if(!navigator.geolocation){st.textContent="Este navegador no permite ubicación.";return;}navigator.geolocation.getCurrentPosition(pos=>{lat=pos.coords.latitude;lng=pos.coords.longitude;st.textContent=`✅ Ubicación obtenida. Precisión aproximada: ${Math.round(pos.coords.accuracy||0)} m`;},()=>{st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso del navegador."},{enableHighAccuracy:true,timeout:15000,maximumAge:0});};
+document.getElementById("sendBtn").onclick=async()=>{const btn=document.getElementById("sendBtn");if(lat===null){alert("Primero tocá “Compartir mi ubicación”.");return;}if(!petId){alert("No se encontró la mascota.");return;}btn.disabled=true;btn.textContent="Enviando...";const message=document.getElementById("message").value.trim();const {error}=await db.from("alerts").insert({pet_id:petId,latitude:lat,longitude:lng,message:message||null});if(error){alert("No pudimos enviar la alerta. Intentá nuevamente.");btn.disabled=false;btn.textContent="🚨 Enviar alerta";return;}document.getElementById("modal").innerHTML='<div class="modalbox success"><h2>✅ Alerta enviada</h2><p>Gracias. La ubicación fue enviada para ayudar a encontrar a esta mascota.</p><button class="btn" onclick="location.reload()">Cerrar</button></div>';};
+loadPet();
 </script>
-</body>
-</html>
+</body></html>
