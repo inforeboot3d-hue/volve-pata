@@ -1000,25 +1000,17 @@ document.getElementById("sendBtn").onclick=async()=>{
 const btn=document.getElementById("sendBtn");
 
 if(lat===null){
-
-alert(
-"Primero tocá “Compartir mi ubicación”."
-);
-
+alert("Primero tocá “Compartir mi ubicación”.");
 return;
 }
 
 if(!petId){
-
-alert(
-"No se encontró la mascota."
-);
-
+alert("No se encontró la mascota.");
 return;
 }
 
 btn.disabled=true;
-btn.textContent="Enviando...";
+btn.textContent="Enviando alerta...";
 
 const message=
 document
@@ -1026,81 +1018,105 @@ document
 .value
 .trim();
 
+let alertId=null;
+
+/*
+  IMPORTANTE:
+  Primero guardamos la alerta. Así una falla al subir la foto
+  no impide enviar la ubicación y el mensaje.
+*/
+const {data: insertedAlert, error: insertError}=await db
+.from("alerts")
+.insert({
+  pet_id:petId,
+  latitude:lat,
+  longitude:lng,
+  message:message||null
+})
+.select("id")
+.maybeSingle();
+
+if(insertError){
+
+console.error("ALERT INSERT ERROR:",insertError);
+
+alert(
+"No pudimos enviar la alerta. Revisá la conexión e intentá nuevamente."
+);
+
+btn.disabled=false;
+btn.textContent="🚨 ENVIAR ALERTA";
+return;
+}
+
+alertId=insertedAlert?.id || null;
+
+/*
+  La alerta ya fue enviada.
+  Si hay foto, intentamos subirla después.
+  Si la foto falla, NO anulamos la alerta.
+*/
 let photoUrl=null;
 
-if(selectedPhotoFile){
+if(selectedPhotoFile && alertId){
 
   try{
 
-    btn.textContent="Subiendo foto...";
+    btn.textContent="Guardando foto...";
 
-    photoUrl =
+    photoUrl=
       await subirFotoAlerta(selectedPhotoFile);
+
+    if(photoUrl){
+
+      const {error:photoUpdateError}=await db
+      .from("alerts")
+      .update({photo_url:photoUrl})
+      .eq("id",alertId);
+
+      if(photoUpdateError){
+        console.error("PHOTO URL UPDATE ERROR:",photoUpdateError);
+      }
+    }
 
   }catch(photoError){
 
     console.error("PHOTO UPLOAD ERROR:",photoError);
 
-    alert(
-      "No pudimos subir la foto. Revisá los permisos de fotos e intentá nuevamente."
-    );
-
-    btn.disabled=false;
-    btn.textContent="🚨 ENVIAR ALERTA";
-
-    return;
+    // La alerta ya fue enviada, así que seguimos.
+    photoUrl=null;
   }
 }
 
-btn.textContent="Enviando alerta...";
-
-const {error}=await db
-.from("alerts")
-.insert({
-pet_id:petId,
-latitude:lat,
-longitude:lng,
-message:message||null,
-photo_url:photoUrl
-});
-
-if(error){
-
-alert(
-"No pudimos enviar la alerta. Intentá nuevamente."
-);
-
-btn.disabled=false;
-btn.textContent="🚨 ENVIAR ALERTA";
-
-return;
-}
-
-const whatsappBtn =
+/*
+  Ahora habilitamos WhatsApp solamente porque la alerta
+  fue guardada correctamente.
+*/
+const whatsappBtn=
 document.getElementById("whatsappBtn");
 
-if(whatsapp){
+if(whatsapp && whatsappBtn){
 
-  const mensaje =
+  const mensaje=
     "Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "
     + codigo;
 
-  whatsappBtn.href =
-    "https://wa.me/" +
-    whatsapp +
-    "?text=" +
+  whatsappBtn.href=
+    "https://wa.me/"+
+    whatsapp+
+    "?text="+
     encodeURIComponent(mensaje);
 
-  whatsappBtn.style.background =
+  whatsappBtn.style.display="block";
+  whatsappBtn.style.background=
     "linear-gradient(90deg,#18c964,#25d366)";
-
   whatsappBtn.style.color="#fff";
   whatsappBtn.style.cursor="pointer";
   whatsappBtn.style.pointerEvents="auto";
-  whatsappBtn.style.boxShadow =
+  whatsappBtn.style.boxShadow=
     "0 8px 25px rgba(37,211,102,.25)";
   whatsappBtn.setAttribute("aria-disabled","false");
-  whatsappBtn.innerHTML =
+  whatsappBtn.innerHTML=
     "💬 &nbsp; CONTACTAR POR WHATSAPP";
 }
 
