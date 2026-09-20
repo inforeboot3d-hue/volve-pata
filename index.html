@@ -689,6 +689,35 @@ return;
 
 petId=data.pet_id;
 
+// Buscar automáticamente el WhatsApp del dueño de esta mascota
+let whatsapp = "";
+
+const { data: ownerRelation } = await db
+  .from("pet_owners")
+  .select("owner_id")
+  .eq("pet_id", petId)
+  .maybeSingle();
+
+if (ownerRelation?.owner_id) {
+
+  const { data: ownerProfile } = await db
+    .from("owner_profiles")
+    .select("whatsapp")
+    .eq("id", ownerRelation.owner_id)
+    .maybeSingle();
+
+  if (ownerProfile?.whatsapp) {
+    whatsapp = String(ownerProfile.whatsapp).replace(/\D/g, "");
+
+    // Formato internacional de WhatsApp para Argentina
+    if (whatsapp.startsWith("54") && whatsapp.length === 12) {
+      whatsapp = "549" + whatsapp.substring(2);
+    } else if (whatsapp.length === 10) {
+      whatsapp = "549" + whatsapp;
+    }
+  }
+}
+
 const p=data.pet;
 
 const photo=p.photo_url
@@ -837,6 +866,25 @@ Dejá un<br>mensaje
 document.getElementById("foundBtn").onclick=()=>{
 document.getElementById("modal").style.display="flex";
 };
+
+// Mostrar y configurar WhatsApp del dueño
+const whatsappBtn =
+document.getElementById("whatsappBtn");
+
+if (whatsapp) {
+
+  const mensaje =
+    "Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "
+    + codigo;
+
+  whatsappBtn.href =
+    "https://wa.me/" +
+    whatsapp +
+    "?text=" +
+    encodeURIComponent(mensaje);
+
+  whatsappBtn.style.display = "block";
+}
 
 }
 
