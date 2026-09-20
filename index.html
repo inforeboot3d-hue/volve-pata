@@ -394,6 +394,36 @@ border-radius:10px;
 background:#1b1b1b;
 }
 
+.photo-upload{
+margin-top:16px;
+padding:15px;
+border:1px dashed #555;
+border-radius:14px;
+background:#171717;
+}
+
+.photo-upload label{
+display:block;
+margin:0 0 10px;
+font-weight:900;
+}
+
+.photo-upload input[type="file"]{
+width:100%;
+color:#ddd;
+font-size:14px;
+}
+
+.photo-preview{
+display:none;
+width:100%;
+max-height:220px;
+object-fit:cover;
+border-radius:12px;
+margin-top:12px;
+border:1px solid #444;
+}
+
 .success{
 text-align:center;
 }
@@ -591,6 +621,17 @@ Compartí tu ubicación para ayudar a mi familia a encontrarme.
 
 <div id="gpsStatus" class="status" style="display:none"></div>
 
+<div class="photo-upload">
+<label for="reportPhoto">📷 Foto de la mascota</label>
+<input
+  type="file"
+  id="reportPhoto"
+  accept="image/*"
+  capture="environment"
+>
+<img id="photoPreview" class="photo-preview" alt="Vista previa">
+</div>
+
 <label for="message">Mensaje</label>
 
 <textarea id="message"
@@ -626,6 +667,8 @@ new URLSearchParams(location.search).get("codigo")
 let petId=null;
 let lat=null;
 let lng=null;
+let selectedPhotoFile=null;
+let selectedPhotoUrl=null;
 
 function esc(v){
 return String(v??"").replace(
@@ -688,24 +731,6 @@ return;
 }
 
 petId=data.pet_id;
-
-// Obtener el WhatsApp del dueño mediante la función pública de Supabase
-let whatsapp = "";
-
-const { data: ownerWhatsapp, error: whatsappError } = await db
-  .rpc("get_pet_whatsapp", { p_pet_id: petId });
-
-if (!whatsappError && ownerWhatsapp) {
-
-  whatsapp = String(ownerWhatsapp).replace(/\D/g, "");
-
-  // Formato internacional de WhatsApp para Argentina
-  if (whatsapp.startsWith("54") && whatsapp.length === 12) {
-    whatsapp = "549" + whatsapp.substring(2);
-  } else if (whatsapp.length === 10) {
-    whatsapp = "549" + whatsapp;
-  }
-}
 
 const p=data.pet;
 
@@ -819,14 +844,19 @@ para que mi familia pueda encontrarme.
   class="btn"
   href="#"
   target="_blank"
+  aria-disabled="true"
   style="
-    display:none;
-    background:linear-gradient(90deg,#18c964,#25d366);
+    display:block;
+    background:#2a2a2a;
+    color:#777;
     text-decoration:none;
     text-align:center;
+    cursor:not-allowed;
+    box-shadow:none;
+    pointer-events:none;
   "
 >
-  💬 &nbsp; CONTACTAR POR WHATSAPP
+  🔒 &nbsp; WHATSAPP SE ACTIVARÁ AL ENVIAR LA ALERTA
 </a>
 
 <div class="action">
@@ -855,25 +885,6 @@ Dejá un<br>mensaje
 document.getElementById("foundBtn").onclick=()=>{
 document.getElementById("modal").style.display="flex";
 };
-
-// Mostrar WhatsApp del dueño si existe
-const whatsappBtn =
-document.getElementById("whatsappBtn");
-
-if (whatsapp) {
-
-  const mensaje =
-    "Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "
-    + codigo;
-
-  whatsappBtn.href =
-    "https://wa.me/" +
-    whatsapp +
-    "?text=" +
-    encodeURIComponent(mensaje);
-
-  whatsappBtn.style.display = "block";
-}
 
 }
 
@@ -925,6 +936,65 @@ maximumAge:0
 
 };
 
+document.getElementById("reportPhoto").addEventListener("change", (event)=>{
+  const file = event.target.files?.[0] || null;
+  selectedPhotoFile = file;
+  selectedPhotoUrl = null;
+
+  const preview = document.getElementById("photoPreview");
+
+  if (!file) {
+    preview.style.display="none";
+    preview.removeAttribute("src");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = ()=>{
+    preview.src = reader.result;
+    preview.style.display="block";
+  };
+
+  reader.readAsDataURL(file);
+});
+
+
+async function subirFotoAlerta(file){
+
+  if(!file) return null;
+
+  const extension =
+    file.type.includes("png") ? "png" :
+    file.type.includes("webp") ? "webp" : "jpg";
+
+  const path =
+    "public/" +
+    petId +
+    "-" +
+    Date.now() +
+    "." +
+    extension;
+
+  const { error } = await db.storage
+    .from("alert-photos")
+    .upload(path, file, {
+      contentType:file.type || "image/jpeg",
+      upsert:false,
+      cacheControl:"31536000"
+    });
+
+  if(error) throw error;
+
+  const { data } =
+    db.storage
+      .from("alert-photos")
+      .getPublicUrl(path);
+
+  return data?.publicUrl || null;
+}
+
+
 document.getElementById("sendBtn").onclick=async()=>{
 
 const btn=document.getElementById("sendBtn");
@@ -956,13 +1026,42 @@ document
 .value
 .trim();
 
+let photoUrl=null;
+
+if(selectedPhotoFile){
+
+  try{
+
+    btn.textContent="Subiendo foto...";
+
+    photoUrl =
+      await subirFotoAlerta(selectedPhotoFile);
+
+  }catch(photoError){
+
+    console.error("PHOTO UPLOAD ERROR:",photoError);
+
+    alert(
+      "No pudimos subir la foto. Revisá los permisos de fotos e intentá nuevamente."
+    );
+
+    btn.disabled=false;
+    btn.textContent="🚨 ENVIAR ALERTA";
+
+    return;
+  }
+}
+
+btn.textContent="Enviando alerta...";
+
 const {error}=await db
 .from("alerts")
 .insert({
 pet_id:petId,
 latitude:lat,
 longitude:lng,
-message:message||null
+message:message||null,
+photo_url:photoUrl
 });
 
 if(error){
@@ -977,6 +1076,34 @@ btn.textContent="🚨 ENVIAR ALERTA";
 return;
 }
 
+const whatsappBtn =
+document.getElementById("whatsappBtn");
+
+if(whatsapp){
+
+  const mensaje =
+    "Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "
+    + codigo;
+
+  whatsappBtn.href =
+    "https://wa.me/" +
+    whatsapp +
+    "?text=" +
+    encodeURIComponent(mensaje);
+
+  whatsappBtn.style.background =
+    "linear-gradient(90deg,#18c964,#25d366)";
+
+  whatsappBtn.style.color="#fff";
+  whatsappBtn.style.cursor="pointer";
+  whatsappBtn.style.pointerEvents="auto";
+  whatsappBtn.style.boxShadow =
+    "0 8px 25px rgba(37,211,102,.25)";
+  whatsappBtn.setAttribute("aria-disabled","false");
+  whatsappBtn.innerHTML =
+    "💬 &nbsp; CONTACTAR POR WHATSAPP";
+}
+
 document.getElementById("modal").innerHTML=`
 
 <div class="modalbox success">
@@ -984,12 +1111,35 @@ document.getElementById("modal").innerHTML=`
 <h2>✅ Alerta enviada</h2>
 
 <p>
-Gracias. La ubicación fue enviada
+Gracias. La ubicación${photoUrl ? ", la foto" : ""} y el mensaje fueron enviados
 para ayudar a encontrar a esta mascota.
 </p>
 
+${
+  whatsapp
+  ? `
+  <a
+    class="btn"
+    href="${"https://wa.me/"+whatsapp+"?text="+encodeURIComponent("Hola, encontré tu mascota mediante Volvé Pata. Código de chapita: "+codigo)}"
+    target="_blank"
+    style="
+      background:linear-gradient(90deg,#18c964,#25d366);
+      text-decoration:none;
+      text-align:center;
+    "
+  >
+    💬 CONTACTAR AL DUEÑO POR WHATSAPP
+  </a>
+  `
+  : `
+  <p style="color:#aaa">
+    La alerta fue enviada. El WhatsApp del dueño no está disponible.
+  </p>
+  `
+}
+
 <button
-class="btn"
+class="btn secondary"
 onclick="location.reload()">
 Cerrar
 </button>
