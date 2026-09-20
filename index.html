@@ -689,32 +689,21 @@ return;
 
 petId=data.pet_id;
 
-// Buscar automáticamente el WhatsApp del dueño de esta mascota
+// Obtener el WhatsApp del dueño mediante la función pública de Supabase
 let whatsapp = "";
 
-const { data: ownerRelation } = await db
-  .from("pet_owners")
-  .select("owner_id")
-  .eq("pet_id", petId)
-  .maybeSingle();
+const { data: ownerWhatsapp, error: whatsappError } = await db
+  .rpc("get_pet_whatsapp", { p_pet_id: petId });
 
-if (ownerRelation?.owner_id) {
+if (!whatsappError && ownerWhatsapp) {
 
-  const { data: ownerProfile } = await db
-    .from("owner_profiles")
-    .select("whatsapp")
-    .eq("id", ownerRelation.owner_id)
-    .maybeSingle();
+  whatsapp = String(ownerWhatsapp).replace(/\D/g, "");
 
-  if (ownerProfile?.whatsapp) {
-    whatsapp = String(ownerProfile.whatsapp).replace(/\D/g, "");
-
-    // Formato internacional de WhatsApp para Argentina
-    if (whatsapp.startsWith("54") && whatsapp.length === 12) {
-      whatsapp = "549" + whatsapp.substring(2);
-    } else if (whatsapp.length === 10) {
-      whatsapp = "549" + whatsapp;
-    }
+  // Formato internacional de WhatsApp para Argentina
+  if (whatsapp.startsWith("54") && whatsapp.length === 12) {
+    whatsapp = "549" + whatsapp.substring(2);
+  } else if (whatsapp.length === 10) {
+    whatsapp = "549" + whatsapp;
   }
 }
 
@@ -867,7 +856,7 @@ document.getElementById("foundBtn").onclick=()=>{
 document.getElementById("modal").style.display="flex";
 };
 
-// Mostrar y configurar WhatsApp del dueño
+// Mostrar WhatsApp del dueño si existe
 const whatsappBtn =
 document.getElementById("whatsappBtn");
 
