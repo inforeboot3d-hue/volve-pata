@@ -4,94 +4,955 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Volvé Pata</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#050505;color:#fff}body{overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 52%,rgba(255,0,0,.18),transparent 24%),radial-gradient(circle at 88% 58%,rgba(180,0,0,.2),transparent 24%),linear-gradient(120deg,#050505 0%,#090909 48%,#120000 100%);z-index:-3}
-body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(135deg,transparent 0 22px,#d40000 23px 26px,transparent 27px 70px);mask-image:linear-gradient(to right,black 0 12%,transparent 27% 73%,black 88%);z-index:-2}
-header{height:118px;display:flex;justify-content:center;align-items:center;border-bottom:3px solid #f11;background:#050505;position:relative;z-index:2}
-.header-logo{width:min(250px,60vw);max-height:105px;object-fit:contain;display:block}
-.layout{max-width:1040px;margin:0 auto;padding:32px 18px 45px;display:grid;grid-template-columns:180px minmax(0,700px) 180px;gap:20px;align-items:start}
-.side{min-height:700px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.side-left .phrase{font-weight:900;text-transform:uppercase;font-size:24px;line-height:1.02;text-align:left;color:#fff;text-shadow:2px 2px 0 #000}
-.side-left .phrase span{color:#f22}.side-right{text-align:right}.script{font-family:"Brush Script MT","Segoe Script",cursive;font-style:italic;color:#fff;font-size:33px;line-height:.95}.script.red{color:#f22}.paws{font-size:48px;line-height:1.4;color:#d40000;opacity:.55;letter-spacing:4px}.side-bottom{font-weight:900;text-transform:uppercase;font-size:18px;line-height:1.05}.side-bottom span{color:#f22}
-.card{background:linear-gradient(145deg,rgba(17,17,17,.98),rgba(5,5,5,.98));border:2px solid #f22;border-radius:30px;padding:26px 30px 28px;box-shadow:0 0 38px rgba(255,0,0,.25),inset 0 0 35px rgba(255,0,0,.04)}
-.code{display:inline-block;background:#ef2028;color:#fff;padding:11px 20px;border-radius:30px;font-weight:900;font-size:19px;box-shadow:0 0 16px rgba(255,0,0,.2)}
-.top{text-align:center}.hello{font-size:38px;font-weight:800;margin:20px 0 0}.pet-name{font-size:44px;font-weight:900;color:#ef2028;text-transform:uppercase;line-height:1.05;margin:3px 0 14px}.species{text-align:center;color:#ddd;font-size:19px}
-.lost{background:linear-gradient(90deg,#f3131d,#ed3030);color:#fff;padding:16px 18px;border-radius:18px;text-align:center;font-weight:900;font-size:21px;margin:20px 0;box-shadow:0 0 20px rgba(255,0,0,.18)}
-.intro{text-align:center;font-size:18px;color:#eee;margin:15px 0 22px}
-.pet-grid{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:stretch}.pet-photo{width:100%;height:220px;object-fit:cover;border-radius:20px;border:2px solid #e22;display:block;background:#111}.photo-placeholder{height:220px;border-radius:20px;border:2px solid #e22;background:#111;display:flex;align-items:center;justify-content:center;font-size:60px}
-.detail{background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #333;border-radius:18px;padding:17px 18px;margin-bottom:12px;min-height:94px}.detail:last-child{margin-bottom:0}.detail-title{color:#aaa;font-size:15px;margin-bottom:8px}.detail-value{font-size:20px;color:#fff;line-height:1.35}.icon{color:#ef2028;font-size:25px;margin-right:8px}
-.help{margin-top:18px;border:1px solid #e22;border-radius:18px;padding:17px 20px;background:linear-gradient(90deg,rgba(80,0,0,.48),rgba(18,18,18,.95));display:flex;gap:14px;align-items:flex-start}.help-icon{font-size:32px;color:#ef2028}.help-title{font-weight:900;font-size:20px;margin-bottom:5px}.help-text{color:#ddd;font-size:17px;line-height:1.35}
-.btn{display:block;width:100%;border:0;border-radius:20px;padding:20px 18px;margin-top:22px;background:linear-gradient(90deg,#ff121d,#ed2f36);color:#fff;font-size:23px;font-weight:900;cursor:pointer;box-shadow:0 0 24px rgba(255,0,0,.18);transition:.15s}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.6}.secondary{background:#151515;border:1px solid #444;box-shadow:none}
-.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px}.action{text-align:center;color:#eee;font-size:15px;line-height:1.2}.action-icon{display:block;font-size:33px;color:#ef2028;margin-bottom:7px}
-.footer{text-align:center;color:#ddd;font-size:16px;margin-top:18px}.footer b{color:#ef2028}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);padding:18px;align-items:center;justify-content:center;z-index:20}.modalbox{background:#111;border:2px solid #f22;border-radius:24px;padding:25px;max-width:520px;width:100%;box-shadow:0 0 35px rgba(255,0,0,.25)}.modalbox h2{margin-top:0}.modalbox p{color:#ddd}.modalbox label{font-weight:700;display:block;margin:16px 0 7px}.modalbox textarea{width:100%;min-height:120px;border:1px solid #444;border-radius:14px;padding:14px;font-size:17px;background:#181818;color:#fff}.status{margin-top:14px;padding:13px;border-radius:12px;background:#191919;color:#ddd}.small{color:#999;font-size:13px;margin-top:12px}.success{text-align:center}.success h2{font-size:30px;color:#fff}
-@media(max-width:850px){.layout{grid-template-columns:1fr;max-width:720px}.side{display:none}.card{padding:22px 18px;border-radius:24px}.header-logo{width:210px}.pet-grid{grid-template-columns:1fr}.pet-photo,.photo-placeholder{height:280px}.hello{font-size:32px}.pet-name{font-size:38px}.actions{gap:8px}.action{font-size:14px}}
-@media(max-width:480px){header{height:94px}.header-logo{width:190px}.layout{padding:18px 10px 35px}.code{font-size:16px;padding:10px 16px}.hello{font-size:28px}.pet-name{font-size:34px}.lost{font-size:18px}.intro{font-size:16px}.pet-photo,.photo-placeholder{height:230px}.help-text{font-size:16px}.btn{font-size:20px}.actions{grid-template-columns:repeat(3,1fr)}.action-icon{font-size:28px}}
+*{box-sizing:border-box}
+
+html,body{
+margin:0;
+min-height:100%;
+font-family:Arial,Helvetica,sans-serif;
+background:#050505;
+color:#fff;
+}
+
+body{
+overflow-x:hidden;
+position:relative;
+}
+
+/* FONDO */
+body:before{
+content:"";
+position:fixed;
+inset:0;
+z-index:-3;
+background:
+radial-gradient(circle at 10% 25%,rgba(255,0,0,.18),transparent 25%),
+radial-gradient(circle at 90% 65%,rgba(255,0,0,.16),transparent 28%),
+linear-gradient(135deg,#030303,#111 50%,#030303);
+}
+
+body:after{
+content:"";
+position:fixed;
+inset:0;
+z-index:-2;
+opacity:.12;
+background:
+radial-gradient(circle at 12% 45%,#f22 0 4px,transparent 5px),
+radial-gradient(circle at 88% 35%,#f22 0 4px,transparent 5px);
+background-size:180px 180px,210px 210px;
+}
+
+/* HEADER */
+header{
+height:120px;
+display:flex;
+justify-content:center;
+align-items:center;
+border-bottom:3px solid #ed1c24;
+background:#050505;
+position:relative;
+z-index:2;
+}
+
+.header-logo{
+width:230px;
+max-height:105px;
+object-fit:contain;
+display:block;
+}
+
+/* DECORACIÓN LATERAL */
+.side{
+position:fixed;
+top:0;
+bottom:0;
+width:220px;
+z-index:0;
+pointer-events:none;
+}
+
+.side.left{left:0}
+.side.right{right:0}
+
+.side-text{
+font-weight:900;
+font-size:25px;
+line-height:1.02;
+text-transform:uppercase;
+padding:32px 15px;
+}
+
+.side-text .red{
+color:#f21f2b;
+}
+
+.script{
+font-family:"Brush Script MT","Segoe Script",cursive;
+font-style:italic;
+font-size:34px;
+line-height:1;
+text-align:center;
+padding-top:30px;
+}
+
+.paw{
+font-size:45px;
+opacity:.25;
+margin:45px 0;
+text-align:center;
+}
+
+.bottom-text{
+position:absolute;
+bottom:45px;
+font-size:20px;
+font-weight:900;
+line-height:1.05;
+text-align:center;
+width:100%;
+}
+
+.bottom-text .red{
+color:#f21f2b;
+}
+
+/* CONTENEDOR */
+.layout{
+max-width:1080px;
+margin:0 auto;
+padding:35px 20px 60px;
+display:flex;
+justify-content:center;
+position:relative;
+z-index:1;
+}
+
+.card{
+width:700px;
+background:linear-gradient(145deg,#151515,#070707);
+border:2px solid #f21f2b;
+border-radius:30px;
+padding:25px 30px 30px;
+box-shadow:
+0 0 35px rgba(255,0,0,.25),
+inset 0 0 25px rgba(255,0,0,.04);
+}
+
+/* CÓDIGO */
+.code{
+display:block;
+width:max-content;
+margin:0 auto 20px;
+background:#f21f2b;
+color:white;
+padding:12px 22px;
+border-radius:30px;
+font-weight:900;
+font-size:20px;
+box-shadow:0 8px 20px rgba(255,0,0,.18);
+}
+
+/* NOMBRE */
+.hello{
+text-align:center;
+font-size:38px;
+font-weight:800;
+margin:12px 0 0;
+}
+
+.pet-name{
+text-align:center;
+font-size:45px;
+font-weight:900;
+color:#f21f2b;
+text-transform:uppercase;
+margin:0;
+line-height:1.05;
+}
+
+.species{
+text-align:center;
+color:#ddd;
+font-size:21px;
+margin:8px 0 22px;
+}
+
+/* MENSAJE PERDIDO */
+.lost{
+background:linear-gradient(90deg,#ff101c,#ed3038);
+border-radius:20px;
+padding:17px 20px;
+text-align:center;
+font-size:23px;
+font-weight:900;
+margin:15px 0 20px;
+box-shadow:0 0 25px rgba(255,0,0,.18);
+}
+
+.intro{
+text-align:center;
+font-size:18px;
+color:#eee;
+margin:15px 0 22px;
+}
+
+/* FOTO + DATOS */
+.pet-grid{
+display:grid;
+grid-template-columns:220px 1fr;
+gap:14px;
+align-items:stretch;
+}
+
+.pet-photo{
+width:100%;
+height:220px;
+object-fit:cover;
+border-radius:20px;
+border:2px solid #f21f2b;
+display:block;
+background:#111;
+}
+
+.photo-placeholder{
+height:220px;
+border:2px solid #f21f2b;
+border-radius:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:55px;
+background:#111;
+}
+
+.details{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.detail{
+background:linear-gradient(145deg,#191919,#0c0c0c);
+border:1px solid #333;
+border-radius:18px;
+padding:17px;
+min-height:94px;
+}
+
+.detail-title{
+color:#aaa;
+font-size:15px;
+margin-bottom:10px;
+}
+
+.detail-value{
+font-size:20px;
+color:#fff;
+line-height:1.3;
+}
+
+/* AYUDA */
+.help{
+margin-top:18px;
+border:1px solid #f21f2b;
+border-radius:20px;
+padding:18px 20px;
+background:linear-gradient(90deg,rgba(120,0,0,.45),rgba(25,25,25,.95));
+display:flex;
+gap:15px;
+align-items:flex-start;
+}
+
+.help-icon{
+font-size:35px;
+}
+
+.help-title{
+font-size:21px;
+font-weight:900;
+margin-bottom:6px;
+}
+
+.help-text{
+font-size:17px;
+line-height:1.45;
+color:#ddd;
+}
+
+/* BOTÓN */
+.btn{
+display:block;
+width:100%;
+border:0;
+border-radius:22px;
+padding:20px;
+margin-top:22px;
+background:linear-gradient(90deg,#ff101c,#ed3038);
+color:#fff;
+font-size:23px;
+font-weight:900;
+cursor:pointer;
+box-shadow:0 8px 25px rgba(255,0,0,.25);
+}
+
+.btn:hover{
+filter:brightness(1.08);
+}
+
+.secondary{
+background:#111;
+border:1px solid #444;
+box-shadow:none;
+}
+
+.actions{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-top:22px;
+}
+
+.action{
+text-align:center;
+color:#eee;
+font-size:15px;
+line-height:1.2;
+}
+
+.action-icon{
+display:block;
+font-size:34px;
+color:#f21f2b;
+margin-bottom:7px;
+}
+
+.footer{
+text-align:center;
+color:#ddd;
+font-size:16px;
+margin-top:22px;
+}
+
+.footer span{
+color:#f21f2b;
+font-size:30px;
+}
+
+/* MODAL */
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.82);
+padding:18px;
+align-items:center;
+justify-content:center;
+z-index:20;
+}
+
+.modalbox{
+background:#111;
+border:2px solid #f21f2b;
+border-radius:24px;
+padding:25px;
+width:100%;
+max-width:520px;
+box-shadow:0 0 40px rgba(255,0,0,.25);
+}
+
+.modalbox h2{
+margin-top:0;
+}
+
+label{
+display:block;
+font-weight:700;
+margin:16px 0 7px;
+}
+
+textarea{
+width:100%;
+min-height:110px;
+border:1px solid #444;
+border-radius:12px;
+padding:12px;
+font-size:16px;
+resize:vertical;
+background:#1b1b1b;
+color:#fff;
+}
+
+.status{
+margin-top:12px;
+padding:12px;
+border-radius:10px;
+background:#1b1b1b;
+}
+
+.success{
+text-align:center;
+}
+
+.success h2{
+font-size:28px;
+}
+
+/* CELULAR */
+@media(max-width:850px){
+
+header{
+height:105px;
+}
+
+.header-logo{
+width:210px;
+max-height:94px;
+}
+
+.side{
+display:none;
+}
+
+.layout{
+padding:18px 10px 35px;
+}
+
+.card{
+width:100%;
+padding:22px 18px 25px;
+border-radius:25px;
+}
+
+.hello{
+font-size:34px;
+}
+
+.pet-name{
+font-size:42px;
+}
+
+.lost{
+font-size:21px;
+}
+
+.pet-grid{
+grid-template-columns:1fr;
+}
+
+.pet-photo,
+.photo-placeholder{
+height:auto;
+max-height:none;
+aspect-ratio:1/1;
+}
+
+.actions{
+grid-template-columns:repeat(3,1fr);
+}
+
+}
+
+@media(max-width:480px){
+
+header{
+height:105px;
+}
+
+.header-logo{
+width:195px;
+}
+
+.card{
+padding:20px 16px 25px;
+}
+
+.code{
+font-size:18px;
+padding:11px 18px;
+}
+
+.hello{
+font-size:32px;
+}
+
+.pet-name{
+font-size:40px;
+}
+
+.species{
+font-size:20px;
+}
+
+.lost{
+font-size:21px;
+padding:18px 12px;
+}
+
+.intro{
+font-size:18px;
+line-height:1.45;
+}
+
+.help{
+padding:16px;
+}
+
+.help-title{
+font-size:20px;
+}
+
+.help-text{
+font-size:16px;
+}
+
+.btn{
+font-size:21px;
+padding:19px 12px;
+}
+
+.action{
+font-size:14px;
+}
+
+.action-icon{
+font-size:30px;
+}
+
+}
 </style>
 </head>
+
 <body>
-<header><img class="header-logo" src="logo.png" alt="Volvé Pata"></header>
-<div class="layout">
-  <aside class="side side-left">
-    <div class="phrase">Cuando una mascota se pierde,<br><span>se pierde un familiar</span> ❤️</div>
-    <div class="paws">🐾<br>🐾<br>🐾</div>
-    <div class="side-bottom">Escaneá<br><span>ayudá</span><br>compartí</div>
-  </aside>
-  <main><div class="card" id="app"><p>Cargando...</p></div></main>
-  <aside class="side side-right">
-    <div class="script">Cada<br>mascota<br>importa <span class="red">♥</span></div>
-    <div class="paws">🐾<br>🐾<br>🐾</div>
-    <div class="script red">Ayudanos<br>a que vuelvan<br>a casa ♥</div>
-    <div class="side-bottom">Juntos por más<br><span>reencuentros</span></div>
-  </aside>
+
+<header>
+<img src="logo.png" class="header-logo" alt="Volvé Pata">
+</header>
+
+<div class="side left">
+<div class="side-text">
+CUANDO<br>
+UNA<br>
+MASCOTA SE<br>
+PIERDE,<br>
+<span class="red">SE PIERDE<br>
+UN FAMILIAR</span>
+<br>❤️
 </div>
-<div class="modal" id="modal"><div class="modalbox">
-  <h2>📍 Encontré esta mascota</h2>
-  <p>Podés avisarle al responsable dónde la viste. No necesitás crear una cuenta.</p>
-  <button class="btn secondary" id="gpsBtn">📍 Compartir mi ubicación</button>
-  <div id="gpsStatus" class="status" style="display:none"></div>
-  <label for="message">Mensaje (opcional)</label>
-  <textarea id="message" placeholder="Ej.: La vi cerca de la plaza..."></textarea>
-  <button class="btn" id="sendBtn">🚨 Enviar alerta</button>
-  <button class="btn secondary" id="closeBtn">Cerrar</button>
-  <div class="small">La ubicación se comparte solamente para ayudar a encontrar a la mascota.</div>
-</div></div>
+
+<div class="paw">🐾</div>
+<div class="paw">🐾</div>
+
+<div class="bottom-text">
+ESCANEÁ<br>
+<span class="red">AYUDÁ</span><br>
+COMPARTÍ
+</div>
+</div>
+
+<div class="side right">
+<div class="script">
+Cada<br>
+mascota<br>
+importa ❤️
+</div>
+
+<div class="paw">🐾</div>
+<div class="paw">🐾</div>
+
+<div class="bottom-text">
+JUNTOS POR MÁS<br>
+<span class="red">REENCUENTROS</span>
+</div>
+</div>
+
+<main class="layout">
+<div class="card" id="app">
+<p style="text-align:center">Cargando...</p>
+</div>
+</main>
+
+<div class="modal" id="modal">
+<div class="modalbox">
+
+<h2>📍 ¿Me encontraste?</h2>
+
+<p>
+Compartí tu ubicación para ayudar a mi familia a encontrarme.
+</p>
+
+<button class="btn secondary" id="gpsBtn">
+📍 Compartir mi ubicación
+</button>
+
+<div id="gpsStatus" class="status" style="display:none"></div>
+
+<label for="message">Mensaje</label>
+
+<textarea id="message"
+placeholder="Ej.: Te vi cerca de la plaza..."></textarea>
+
+<button class="btn" id="sendBtn">
+🚨 ENVIAR ALERTA
+</button>
+
+<button class="btn secondary" id="closeBtn">
+Cerrar
+</button>
+
+</div>
+</div>
+
 <script>
+
 const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const codigo=new URLSearchParams(location.search).get("codigo")||"VP-000001";
-let petId=null,lat=null,lng=null;
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;",'\'':"&#039;"}[m]));}
-async function loadPet(){
- const box=document.getElementById("app");
- const {data,error}=await db.from("tags").select("code,pet_id,pet:pets(name,species,photo_url,description,is_lost)").eq("code",codigo).eq("active",true).maybeSingle();
- if(error){box.innerHTML="<h2>Volvé Pata</h2><p>No pudimos consultar la información. Intentá nuevamente.</p>";return;}
- if(!data||!data.pet){box.innerHTML="<h2>Volvé Pata</h2><p>Esta chapita no está vinculada a una mascota.</p>";return;}
- petId=data.pet_id;const p=data.pet;
- box.innerHTML=`
- <div class="top"><span class="code">Código ${esc(data.code)}</span>
- <div class="hello">Hola, soy</div><div class="pet-name">${esc(p.name)}</div><div class="species">${esc(p.species)}</div></div>
- ${p.is_lost?'<div class="lost">🐾 Me perdí y necesito volver con mi familia ❤️</div>':''}
- <div class="intro">Si encontraste mi chapita, ayudame a volver con mi familia.</div>
- <div class="pet-grid">
-   <div>${p.photo_url?`<img class="pet-photo" src="${esc(p.photo_url)}" alt="Foto de ${esc(p.name)}">`:'<div class="photo-placeholder">🐾</div>'}</div>
-   <div>
-    <div class="detail"><div class="detail-title"><span class="icon">🐾</span>Tipo de mascota</div><div class="detail-value">${esc(p.species||'Mascota')}</div></div>
-    <div class="detail"><div class="detail-title"><span class="icon">▣</span>Sobre mí</div><div class="detail-value">${p.description?esc(p.description):'Mi familia está esperando encontrarme.'}</div></div>
-   </div>
- </div>
- <div class="help"><div class="help-icon">📍</div><div><div class="help-title">¿Me encontraste?</div><div class="help-text">Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</div></div></div>
- <button class="btn" id="foundBtn">📍 ENCONTRÉ ESTA MASCOTA　›</button>
- <div class="actions"><div class="action"><span class="action-icon">⌖</span>Compartí tu<br>ubicación</div><div class="action"><span class="action-icon">◉</span>Adjuntá una<br>foto</div><div class="action"><span class="action-icon">💬</span>Dejá un<br>mensaje</div></div>
- <div class="footer"><b>🐾</b> Un escaneo puede llevarme de vuelta a casa <b>♥</b></div>`;
- document.getElementById("foundBtn").onclick=()=>document.getElementById("modal").style.display="flex";
+
+const SUPABASE_PUBLISHABLE_KEY=
+"sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
+
+const db=supabase.createClient(
+SUPABASE_URL,
+SUPABASE_PUBLISHABLE_KEY
+);
+
+const codigo=
+new URLSearchParams(location.search).get("codigo")
+||"VP-000001";
+
+let petId=null;
+let lat=null;
+let lng=null;
+
+function esc(v){
+return String(v??"").replace(
+/[&<>"']/g,
+m=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[m])
+);
 }
-document.getElementById("closeBtn").onclick=()=>document.getElementById("modal").style.display="none";
-document.getElementById("gpsBtn").onclick=async()=>{const st=document.getElementById("gpsStatus");st.style.display="block";st.textContent="Solicitando ubicación...";if(!navigator.geolocation){st.textContent="Este navegador no permite ubicación.";return;}navigator.geolocation.getCurrentPosition(pos=>{lat=pos.coords.latitude;lng=pos.coords.longitude;st.textContent=`✅ Ubicación obtenida. Precisión aproximada: ${Math.round(pos.coords.accuracy||0)} m`;},()=>{st.textContent="❌ No se pudo obtener la ubicación. Revisá el permiso del navegador."},{enableHighAccuracy:true,timeout:15000,maximumAge:0});};
-document.getElementById("sendBtn").onclick=async()=>{const btn=document.getElementById("sendBtn");if(lat===null){alert("Primero tocá “Compartir mi ubicación”.");return;}if(!petId){alert("No se encontró la mascota.");return;}btn.disabled=true;btn.textContent="Enviando...";const message=document.getElementById("message").value.trim();const {error}=await db.from("alerts").insert({pet_id:petId,latitude:lat,longitude:lng,message:message||null});if(error){alert("No pudimos enviar la alerta. Intentá nuevamente.");btn.disabled=false;btn.textContent="🚨 Enviar alerta";return;}document.getElementById("modal").innerHTML='<div class="modalbox success"><h2>✅ Alerta enviada</h2><p>Gracias. La ubicación fue enviada para ayudar a encontrar a esta mascota.</p><button class="btn" onclick="location.reload()">Cerrar</button></div>';};
+
+async function loadPet(){
+
+const box=document.getElementById("app");
+
+const {
+data,
+error
+}=await db
+.from("tags")
+.select(`
+code,
+pet_id,
+pet:pets(
+name,
+species,
+photo_url,
+description,
+is_lost
+)
+`)
+.eq("code",codigo)
+.eq("active",true)
+.maybeSingle();
+
+if(error){
+
+box.innerHTML=`
+<h2 style="text-align:center">Volvé Pata</h2>
+<p style="text-align:center">
+No pudimos consultar la información.
+Intentá nuevamente.
+</p>`;
+
+return;
+}
+
+if(!data || !data.pet){
+
+box.innerHTML=`
+<h2 style="text-align:center">Volvé Pata</h2>
+<p style="text-align:center">
+Esta chapita no está vinculada a una mascota.
+</p>`;
+
+return;
+}
+
+petId=data.pet_id;
+
+const p=data.pet;
+
+const photo=p.photo_url
+?`
+<img
+class="pet-photo"
+src="${esc(p.photo_url)}"
+alt="${esc(p.name)}">
+`
+:`
+<div class="photo-placeholder">
+🐾
+</div>
+`;
+
+box.innerHTML=`
+
+<span class="code">
+Código ${esc(data.code)}
+</span>
+
+<div class="hello">
+Hola, soy
+</div>
+
+<div class="pet-name">
+${esc(p.name)}
+</div>
+
+<div class="species">
+${esc(p.species)}
+</div>
+
+${
+p.is_lost
+?
+`
+<div class="lost">
+🐾 &nbsp; Me perdí y necesito volver con mi familia ❤️
+</div>
+`
+:""
+}
+
+<div class="intro">
+Si encontraste mi chapita, ayudame a volver con mi familia.
+</div>
+
+<div class="pet-grid">
+
+${photo}
+
+<div class="details">
+
+<div class="detail">
+
+<div class="detail-title">
+🐾 &nbsp; Tipo de mascota
+</div>
+
+<div class="detail-value">
+${esc(p.species)}
+</div>
+
+</div>
+
+<div class="detail">
+
+<div class="detail-title">
+📄 &nbsp; Sobre mí
+</div>
+
+<div class="detail-value">
+${esc(p.description || "Sin información adicional.")}
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="help">
+
+<div class="help-icon">
+📍
+</div>
+
+<div>
+
+<div class="help-title">
+¿Me encontraste?
+</div>
+
+<div class="help-text">
+Compartí tu ubicación, una foto y un mensaje
+para que mi familia pueda encontrarme.
+</div>
+
+</div>
+
+</div>
+
+<button class="btn" id="foundBtn">
+✈️ &nbsp; ENCONTRÉ ESTA MASCOTA &nbsp; ›
+</button>
+
+<div class="actions">
+
+<div class="action">
+<span class="action-icon">📍</span>
+Compartí tu<br>ubicación
+</div>
+
+<div class="action">
+<span class="action-icon">📷</span>
+Adjuntá una<br>foto
+</div>
+
+<div class="action">
+<span class="action-icon">💬</span>
+Dejá un<br>mensaje
+</div>
+
+</div>
+
+<div class="footer">
+🐾 &nbsp; Un escaneo puede llevarme de vuelta a casa
+<span>♡</span>
+</div>
+`;
+
+document.getElementById("foundBtn").onclick=()=>{
+document.getElementById("modal").style.display="flex";
+};
+
+}
+
+document.getElementById("closeBtn").onclick=()=>{
+document.getElementById("modal").style.display="none";
+};
+
+document.getElementById("gpsBtn").onclick=async()=>{
+
+const st=document.getElementById("gpsStatus");
+
+st.style.display="block";
+st.textContent="Solicitando ubicación...";
+
+if(!navigator.geolocation){
+
+st.textContent=
+"Este navegador no permite obtener ubicación.";
+
+return;
+}
+
+navigator.geolocation.getCurrentPosition(
+
+pos=>{
+
+lat=pos.coords.latitude;
+lng=pos.coords.longitude;
+
+st.textContent=
+`✅ Ubicación obtenida. Precisión aproximada: ${Math.round(pos.coords.accuracy||0)} m`;
+
+},
+
+()=>{
+
+st.textContent=
+"❌ No se pudo obtener la ubicación. Revisá el permiso del navegador.";
+
+},
+
+{
+enableHighAccuracy:true,
+timeout:15000,
+maximumAge:0
+}
+
+);
+
+};
+
+document.getElementById("sendBtn").onclick=async()=>{
+
+const btn=document.getElementById("sendBtn");
+
+if(lat===null){
+
+alert(
+"Primero tocá “Compartir mi ubicación”."
+);
+
+return;
+}
+
+if(!petId){
+
+alert(
+"No se encontró la mascota."
+);
+
+return;
+}
+
+btn.disabled=true;
+btn.textContent="Enviando...";
+
+const message=
+document
+.getElementById("message")
+.value
+.trim();
+
+const {error}=await db
+.from("alerts")
+.insert({
+pet_id:petId,
+latitude:lat,
+longitude:lng,
+message:message||null
+});
+
+if(error){
+
+alert(
+"No pudimos enviar la alerta. Intentá nuevamente."
+);
+
+btn.disabled=false;
+btn.textContent="🚨 ENVIAR ALERTA";
+
+return;
+}
+
+document.getElementById("modal").innerHTML=`
+
+<div class="modalbox success">
+
+<h2>✅ Alerta enviada</h2>
+
+<p>
+Gracias. La ubicación fue enviada
+para ayudar a encontrar a esta mascota.
+</p>
+
+<button
+class="btn"
+onclick="location.reload()">
+Cerrar
+</button>
+
+</div>
+
+`;
+
+};
+
 loadPet();
+
 </script>
-</body></html>
+
+</body>
+</html>
