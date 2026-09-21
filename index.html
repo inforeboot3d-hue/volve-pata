@@ -42,7 +42,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #444;border-radius:12p
 </style>
 </head>
 <body>
-<div class="top"><img src="logo-volve-pata.png" alt="VOLVÉ PATA"></div>
+<div class="top"><img src="logo.png" alt="VOLVÉ PATA"></div>
 
 <div class="layout">
   <aside class="side">CUANDO UNA MASCOTA<br>SE PIERDE,<br><span>SE PIERDE<br>UN FAMILIAR</span><div class="heart">♡</div></aside>
@@ -172,13 +172,10 @@ async function cargar(){
       "<span>Compartí tu ubicación, una foto y un mensaje para que mi familia pueda encontrarme.</span>"+
     "</div>"+
     "<button id='foundBtn'>🚨 ENCONTRÉ ESTA MASCOTA</button>"+
-    (ownerWhatsapp ? "<button id='whatsappBtn' class='whatsapp' style='margin-top:12px'>💚 CONTACTAR A MI FAMILIA POR WHATSAPP</button>" : "")+
-    "<p class='small'>Un escaneo puede llevarme de vuelta a casa ❤️</p>";
+    "<p class='small'>Primero enviá la alerta. Si el dueño tiene WhatsApp vinculado, se habilitará después de enviar la alerta. ❤️</p>";
 
   document.getElementById("foundBtn").onclick=abrirFormulario;
 
-  const waBtn=document.getElementById("whatsappBtn");
-  if(waBtn) waBtn.onclick=contactarWhatsApp;
 }
 
 function contactarWhatsApp(){
@@ -209,6 +206,11 @@ function contactarWhatsApp(){
 }
 
 function abrirFormulario(){
+  const mw=document.getElementById("modalWhatsappBtn");
+  if(mw){
+    mw.disabled=true;
+    mw.textContent="🔒 WHATSAPP BLOQUEADO";
+  }
   document.getElementById("foundModal").style.display="block";
 }
 
@@ -309,7 +311,7 @@ document.getElementById("sendBtn").onclick=async()=>{
     if(mw){
       if(ownerWhatsapp){
         mw.disabled=false;
-        mw.textContent="💚 CONTACTAR A MI FAMILIA POR WHATSAPP";
+        mw.textContent="💚 CONTACTAR AL DUEÑO POR WHATSAPP";
       }else{
         mw.disabled=true;
         mw.textContent="🔒 WHATSAPP NO DISPONIBLE";
