@@ -79,7 +79,8 @@ input[type=file]{width:100%;padding:12px;border:1px solid #444;border-radius:12p
 const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const codigo=new URLSearchParams(location.search).get("codigo");
+const codigo=new const params=new URLSearchParams(location.search);
+const codigo=params.get("codigo") || (location.pathname.match(/^\/v\/([^/]+)\/?$/)||[])[1] || null;
 let petId=null, lat=null, lng=null, ownerWhatsapp=null;
 
 function esc(v){
