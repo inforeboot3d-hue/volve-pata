@@ -42,7 +42,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #444;border-radius:12p
 .whatsapp-note{margin-top:14px;padding:12px 14px;border:1px solid #4b171d;border-radius:12px;background:#160b0d;color:#ddd;text-align:center;font-size:14px;line-height:1.45}.whatsapp-note strong{color:#fff}.whatsapp-note span{color:#aaa}</style>
 </head>
 <body>
-<div class="top"><img src="logo.png" alt="VOLVÉ PATA"></div>
+<div class="top"><img src="logsrc="/logo.png"o.png" alt="VOLVÉ PATA"></div>
 
 <div class="layout">
   <aside class="side">CUANDO UNA MASCOTA<br>SE PIERDE,<br><span>SE PIERDE<br>UN FAMILIAR</span><div class="heart">♡</div></aside>
@@ -79,7 +79,7 @@ input[type=file]{width:100%;padding:12px;border:1px solid #444;border-radius:12p
 const SUPABASE_URL="https://lvglcgdkbcchtuwtoxca.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2LOTYSuSSD6tm7lT-ozUNw_o-Yw75go";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const codigo=new const params=new URLSearchParams(location.search);
+const params=new URLSearchParams(location.search);
 const codigo=params.get("codigo") || (location.pathname.match(/^\/v\/([^/]+)\/?$/)||[])[1] || null;
 let petId=null, lat=null, lng=null, ownerWhatsapp=null;
 
